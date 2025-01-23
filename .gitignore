@@ -1,0 +1,215 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+/coverage
+/test-results
+/playwright-report
+
+# Next.js
+/.next/
+/out/
+/build
+.next
+next-env.d.ts
+
+# Production
+/build
+/dist
+
+# Environment Variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+debug.log
+
+# IDE / Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.iml
+.DS_Store
+*.sublime-workspace
+*.sublime-project
+
+# Typescript
+*.tsbuildinfo
+
+# Prisma
+/prisma/*.db
+/prisma/migrations/
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# Cache
+.cache/
+.eslintcache
+.stylelintcache
+
+# Vercel
+.vercel
+.turbo
+
+# PWA files
+**/public/sw.js
+**/public/workbox-*.js
+**/public/worker-*.js
+**/public/sw.js.map
+**/public/workbox-*.js.map
+**/public/worker-*.js.map
+
+# Storybook
+/storybook-static
+
+# Testing
+/cypress/videos/
+/cypress/screenshots/
+
+# Package managers
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Generated files
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Local files
+/local
+*.local
+
+# Temporary files
+*.tmp
+*.temp
+.temp
+.tmp
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Build output
+/dist
+/tmp
+/temp
+
+# Large media files
+*.mp4
+*.tiff
+*.avi
+*.flv
+*.mov
+*.wmv
+
+# Security / SSL
+*.pem
+*.cert
+*.key
+
+# Generated API documentation
+/docs
+
+# Code coverage
+.nyc_output
+
+# Misc
+.DS_Store
+*.pem
+.env.example
+.env
+
+# Debug
+.debug/
+
+# Sentry Auth Token
+.sentryclirc
+
+# Sentry Config File
+sentry.properties
+
+# PWA
+**/public/precache.*.*.js
+**/public/sw.js
+**/public/workbox-*.js
+**/public/worker-*.js
+**/public/fallback-*.js
+**/public/precache.*.*.js.map
+**/public/sw.js.map
+**/public/workbox-*.js.map
+**/public/worker-*.js.map
+**/public/fallback-*.js.map
+
+# Calendar specific
+/uploads
+/temp-uploads
+calendar-backup-*

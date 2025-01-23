@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(cuid())
+  name            String?
+  email           String?          @unique
+  emailVerified   DateTime?
+  image           String?
+  password        Password?
+  role            String?          @default("user")
+  pushSubscription String?
+  preferences     UserPreferences?
+  events          Event[]
+  activities      UserActivity[]
+  notifications   Notification[]
+  eventAttendees  EventAttendee[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  createdBy       String          @default("parthsharma-git")
+  updatedBy       String?
+
+  @@index([email])
+}
+
+model Password {
+  id         String   @id @default(cuid())
+  hash       String
+  salt       String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String   @default("parthsharma-git")
+  updatedBy  String?
+}
+
+model UserPreferences {
+  id            String    @id @default(cuid())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String    @unique
+  theme         String    @default("system")
+  notifications Boolean   @default(true)
+  weekStartsOn  Int       @default(1)
+  timezone      String    @default("UTC")
+  language      String    @default("en")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     String    @default("parthsharma-git")
+  updatedBy     String?
+
+  @@index([userId])
+}
+
+model Event {
+  id                   String         @id @default(cuid())
+  title               String
+  description         String?
+  startTime           DateTime
+  endTime             DateTime
+  location            String?
+  category            String?
+  googleCalendarEventId String?       @unique
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String
+  activities          UserActivity[]
+  notifications       Notification[]
+  attendees           EventAttendee[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  createdBy           String         @default("parthsharma-git")
+  updatedBy           String?
+
+  @@index([userId])
+  @@index([startTime])
+  @@index([endTime])
+  @@index([category])
+  @@index([googleCalendarEventId])
+}
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  type      String
+  details   String
+  event     Event?   @relation(fields: [eventId], references: [id])
+  eventId   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  createdBy String   @default("parthsharma-git")
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  event     Event?   @relation(fields: [eventId], references: [id])
+  eventId   String?
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+  createdBy String   @default("parthsharma-git")
+  updatedBy String?
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model EventAttendee {
+  id          String         @id @default(cuid())
+  event       Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  status      AttendeeStatus @default(PENDING)
+  role        AttendeeRole   @default(REQUIRED)
+  response    String?        // Optional response message
+  notifyBefore Int?         // Minutes before event to send notification
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  createdBy   String         @default("parthsharma-git")
+  updatedBy   String?
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model AuthLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  success     Boolean
+  providerId  String
+  ipAddress   String
+  userAgent   String
+  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  createdBy   String   @default("parthsharma-git")
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([providerId])
+}
+
+// Enum definitions
+enum ActivityType {
+  SIGN_IN
+  SIGN_OUT
+  CREATE_EVENT
+  UPDATE_EVENT
+  DELETE_EVENT
+  VIEW_EVENT
+  LIST_EVENTS
+  SEARCH_EVENTS
+  UPDATE_PROFILE
+  UPDATE_PREFERENCES
+  CALENDAR_SYNC
+  VIEW_STATS
+  PUSH_SUBSCRIPTION
+  NOTIFICATION_SENT
+}
+
+enum AttendeeStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  TENTATIVE
+}
+
+enum AttendeeRole {
+  ORGANIZER
+  REQUIRED
+  OPTIONAL
+}
+
+enum Theme {
+  light
+  dark
+  system
+}
+
+enum Role {
+  user
+  admin
+  moderator
+}
