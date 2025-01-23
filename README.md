@@ -36,10 +36,10 @@ A modern, feature-rich calendar application built with Next.js 14, TypeScript, a
 
 ```bash
 # Clone the repository
-git clone https://github.com/parthsharma-git/calendar-app.git
+git clone https://github.com/pswitchy/Calendar-App.git
 
 # Navigate to project directory
-cd calendar-app
+cd Calendar-App
 
 # Install dependencies
 npm install
