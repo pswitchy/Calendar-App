@@ -3,8 +3,6 @@
 ## Overview
 A modern, feature-rich calendar application built with Next.js 14, TypeScript, and Prisma. Last updated by parthsharma-git on 2025-01-23 17:47:48 UTC.
 
-![Calendar Screenshot](public/calendar-screenshot.png)
-
 ## Features
 - 📅 Multiple calendar views (Month, Week, Day)
 - 🔄 Real-time updates with optimistic UI
