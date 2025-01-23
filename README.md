@@ -1,7 +1,7 @@
 # Calendar Application
 
 ## Overview
-A modern, feature-rich calendar application built with Next.js 14, TypeScript, and Prisma. Last updated by parthsharma-git on 2025-01-23 17:47:48 UTC.
+A modern, feature-rich calendar application built with Next.js 14, TypeScript, and Prisma. 
 
 ## Features
 - 📅 Multiple calendar views (Month, Week, Day)
@@ -28,7 +28,7 @@ A modern, feature-rich calendar application built with Next.js 14, TypeScript, a
 
 ## Prerequisites
 - Node.js 18.x or later
-- PostgreSQL 14 or later
+- PostgreSQL 17 
 - npm or yarn
 - Git
 
@@ -71,30 +71,6 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
 # API Keys
 NOTIFICATION_API_KEY="your-notification-api-key"
-```
-
-## Project Structure
-```
-calendar-app/
-├── src/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── auth/
-│   │   └── calendar/
-│   ├── components/
-│   │   ├── calendar/
-│   │   ├── ui/
-│   │   └── shared/
-│   ├── lib/
-│   ├── hooks/
-│   ├── types/
-│   └── utils/
-├── prisma/
-│   ├── schema.prisma
-│   └── migrations/
-├── public/
-├── tests/
-└── package.json
 ```
 
 ## API Routes
