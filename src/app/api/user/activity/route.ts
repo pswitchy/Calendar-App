@@ -12,10 +12,7 @@ async function syncCalendarEvent(event: calendar_v3.Schema$Event, userId: string
 
   await prisma.event.upsert({
     where: {
-      googleCalendarEventId_userId: {
-        googleCalendarEventId: event.id,
-        userId,
-      },
+      googleCalendarEventId: event.id,
     },
     update: {
       title: event.summary,

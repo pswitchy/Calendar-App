@@ -7,7 +7,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from
 import { CalendarDay } from './CalendarDay';
 import { useCalendar } from './CalendarContext';
 import { CalendarHeader } from './CalendarHeader';
-import { CalendarSidebar } from './CalendarSidebar';
+// import { CalendarSidebar } from './CalendarSidebar';
 import type { CalendarEvent } from '@/types/calendar';
 
 export const Calendar = () => {
@@ -54,13 +54,13 @@ export const Calendar = () => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {isSidebarOpen && (
+      {/* {isSidebarOpen && (
         <CalendarSidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
           className="w-64 flex-shrink-0"
         />
-      )}
+      )} */}
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <CalendarHeader

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { CalendarHeader } from '@/components/calendar/CalendarHeader';
 import { CalendarSidebar } from '@/components/calendar/CalendarSidebar';
 import { useCalendar } from '@/components/calendar/CalendarContext';
-import { useCustomToast } from '@/components/ui/toast';
+import { useCustomToast } from '@/components/ui/useCustomToast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Providers } from '@/components/providers';

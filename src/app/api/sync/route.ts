@@ -12,16 +12,13 @@ async function syncCalendarEvent(event: calendar_v3.Schema$Event, userId: string
 
   await prisma.event.upsert({
     where: {
-      googleCalendarEventId_userId: {
-        googleCalendarEventId: event.id,
-        userId,
-      },
+      googleCalendarEventId: event.id,
     },
     update: {
       title: event.summary,
       description: event.description || '',
-      startTime: event.start?.dateTime ? new Date(event.start.dateTime) : null,
-      endTime: event.end?.dateTime ? new Date(event.end.dateTime) : null,
+      startTime: event.start?.dateTime ? new Date(event.start.dateTime) : undefined,
+      endTime: event.end?.dateTime ? new Date(event.end.dateTime) : undefined,
       location: event.location || '',
       updatedAt: new Date('2025-01-23 07:28:50'),
     },

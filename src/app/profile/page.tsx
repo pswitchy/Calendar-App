@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { User, Settings, Bell, Calendar, Clock, Globe, Shield } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useCustomToast } from '@/components/ui/toast';
+import { useCustomToast } from '@/components/ui/useCustomToast';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

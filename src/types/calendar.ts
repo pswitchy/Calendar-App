@@ -9,6 +9,7 @@ export interface CalendarEvent {
     location?: string;
     category?: string;
     color?: string;
+    isAllDay?: boolean;
     googleCalendarEventId?: string;
     userId: string;
     createdAt: string | Date;
