@@ -56,6 +56,7 @@ export async function POST(
         eventId: params.id,
         email,
         role,
+        userId: session.user.id, // Assuming session.user.id contains the userId
       },
     });
 

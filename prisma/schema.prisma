@@ -21,12 +21,21 @@ model User {
   activities      UserActivity[]
   notifications   Notification[]
   eventAttendees  EventAttendee[]
+  accounts        Account[]
+  sessions        Session[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   createdBy       String          @default("parthsharma-git")
   updatedBy       String?
-
+  profile         UserProfile?
+  
+  status         UserStatus     @default(ACTIVE)
+  lastLogin      DateTime?
+  failedAttempts Int           @default(0)
+  lockoutUntil   DateTime?
+  
   @@index([email])
+  @@index([status])
 }
 
 model Password {
@@ -128,6 +137,7 @@ model EventAttendee {
   eventId     String
   user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String
+  email       String
   status      AttendeeStatus @default(PENDING)
   role        AttendeeRole   @default(REQUIRED)
   response    String?        // Optional response message
@@ -145,19 +155,47 @@ model EventAttendee {
   @@index([createdAt])
 }
 
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model AuthLog {
   id          String   @id @default(cuid())
-  userId      String?
   success     Boolean
   providerId  String
   ipAddress   String
   userAgent   String
-  timestamp   DateTime @default(now())
+  timestamp   DateTime
+  createdBy   String
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now())
-  createdBy   String   @default("parthsharma-git")
+  updatedAt   DateTime @updatedAt
 
-  @@index([userId])
   @@index([timestamp])
   @@index([providerId])
 }
@@ -203,4 +241,79 @@ enum Role {
   user
   admin
   moderator
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+
+enum TimeZonePreference {
+  LOCAL
+  UTC
+  CUSTOM
+}
+
+enum CalendarView {
+  MONTH
+  WEEK
+  DAY
+  AGENDA
+}
+
+
+model UserProfile {
+  id                String             @id @default(cuid())
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String             @unique
+  
+  // Personal Information
+  displayName       String?
+  title            String?
+  bio              String?            @db.Text
+  phoneNumber      String?
+  location         String?
+  
+  // Preferences
+  theme            Theme             
+  language         String            @default("en")
+  timeZone         String            @default("UTC")
+  timeZonePreference TimeZonePreference @default(LOCAL)
+  defaultView      CalendarView      @default(MONTH)
+  
+  // Calendar Settings
+  workingHours     Json?             // Store working hours for each day
+  weekStartsOn     Int               @default(0) // 0 = Sunday, 1 = Monday
+  defaultEventDuration Int           @default(60) // in minutes
+  showWeekends     Boolean           @default(true)
+  showDeclinedEvents Boolean         @default(false)
+  
+  // Notification Preferences
+  emailNotifications Boolean         @default(true)
+  pushNotifications Boolean         @default(true)
+  reminderDefault   Int?             // minutes before event
+  
+  // Status and Metadata
+  status           UserStatus        @default(ACTIVE)
+  lastActive       DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  createdBy        String            @default("parthsharma-git")
+  updatedBy        String?
+
+  // Custom Calendar Integration Settings
+  calendarIntegrations Json?        // Store external calendar integration preferences
+  
+  // Analytics and Usage
+  loginCount       Int               @default(0)
+  eventsCreated    Int               @default(0)
+  totalEventHours  Float             @default(0)
+
+  @@index([userId])
+  @@index([status])
+  @@index([lastActive])
+  @@map("user_profiles")
 }
