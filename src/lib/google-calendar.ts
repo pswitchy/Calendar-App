@@ -37,22 +37,28 @@ export class GoogleCalendarService {
   async createEvent(eventData: {
     summary: string;
     description?: string;
-    start: { dateTime: string, timeZone: string };
-    end: { dateTime: string, timeZone: string };
+    start: { dateTime: string; timeZone: string };
+    end: { dateTime: string; timeZone: string };
     location?: string;
+    colorId?: string;
   }) {
     const calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
-    
+  
     try {
       const response = await calendar.events.insert({
         calendarId: 'primary',
-        requestBody: eventData,
+        requestBody: {
+          ...eventData,
+          reminders: {
+            useDefault: true,
+          },
+        },
       });
       
       return response.data;
     } catch (error) {
       console.error('Error creating calendar event:', error);
-      throw error;
+      throw new Error('Google Calendar integration failed');
     }
   }
 }

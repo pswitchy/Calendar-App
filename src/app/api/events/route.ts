@@ -1,3 +1,4 @@
+// src/app/api/events/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -6,7 +7,7 @@ import prisma from '@/lib/prisma';
 import { handleApiError, ApiError } from '@/lib/api-utils';
 import { z } from 'zod';
 
-// Update the schema to match the frontend data structure
+// Zod validation schema matching frontend structure
 const eventSchema = z.object({
   title: z.string().min(1).max(100),
   description: z.string().optional(),
@@ -15,9 +16,6 @@ const eventSchema = z.object({
   location: z.string().optional(),
   isAllDay: z.boolean().optional().default(false),
   color: z.string().optional(),
-  // createdBy: z.string(),
-  // createdAt: z.date().or(z.string()),
-  // updatedAt: z.date().or(z.string()),
 });
 
 export async function GET(
@@ -27,7 +25,7 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new ApiError(401, 'Unauthorized');
     }
 
     const { searchParams } = new URL(req.url);
@@ -58,16 +56,44 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      throw new ApiError(401, 'Unauthorized');
     }
 
+    // Validate request body
     const body = await req.json();
-    const validatedData = eventSchema.parse({
-      ...body,
-      createdAt: new Date(body.createdAt),
-      updatedAt: new Date(body.updatedAt),
-    });
+    const validatedData = eventSchema.parse(body);
+    
+    // Google Calendar integration
+    let googleCalendarEventId = null;
+    if (session.user.accessToken) {
+      try {
+        const calendarService = new GoogleCalendarService(session.user.accessToken);
+        
+        // Map to Google Calendar event format
+        const googleEventData = {
+          summary: validatedData.title,
+          description: validatedData.description,
+          start: {
+            dateTime: validatedData.startTime,
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+          end: {
+            dateTime: validatedData.endTime,
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+          location: validatedData.location,
+          colorId: mapColorToGoogleId(validatedData.color || '#2196f3'),
+        };
 
+        const googleEvent = await calendarService.createEvent(googleEventData);
+        googleCalendarEventId = googleEvent.id;
+      } catch (googleError) {
+        console.error('Google Calendar sync failed:', googleError);
+        // Continue with local database save even if Google sync fails
+      }
+    }
+
+    // Save to local database
     const event = await prisma.event.create({
       data: {
         title: validatedData.title,
@@ -75,29 +101,44 @@ export async function POST(req: Request) {
         startTime: new Date(validatedData.startTime),
         endTime: new Date(validatedData.endTime),
         location: validatedData.location,
-        isAllDay: validatedData.isAllDay || false,
+        isAllDay: validatedData.isAllDay,
         color: validatedData.color,
+        googleCalendarEventId,
         userId: session.user.id,
-        createdBy: 'parthsharma-git',
-        createdAt: new Date('2025-01-25 15:06:52'),
-        updatedAt: new Date('2025-01-25 15:06:52'),
+        createdBy: session.user.name || 'unknown',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
-    // Log the activity
+    // Create activity log
     await prisma.userActivity.create({
       data: {
         userId: session.user.id,
         type: 'CREATE_EVENT',
         details: `Created event: ${event.title}`,
-        createdAt: new Date('2025-01-25 15:06:52'),
-        createdBy: 'parthsharma-git',
+        createdAt: new Date(),
+        createdBy: session.user.name || 'system',
       },
     });
 
     return NextResponse.json(event, { status: 201 });
   } catch (error) {
-    console.error('Event creation error:', error);
+    console.error('[EVENT_CREATION_ERROR]', error);
     return handleApiError(error);
   }
+}
+
+// Helper function to map hex colors to Google Calendar color IDs
+function mapColorToGoogleId(hexColor: string): string {
+  const colorMap: Record<string, string> = {
+    '#2196f3': '1', // Blue
+    '#4caf50': '2', // Green
+    '#ff9800': '3', // Orange
+    '#9c27b0': '4', // Purple
+    '#f44336': '5', // Red
+    '#795548': '6', // Brown
+    '#607d8b': '7', // Gray
+  };
+  return colorMap[hexColor.toLowerCase()] || '1';
 }
