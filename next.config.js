@@ -4,8 +4,8 @@ const nextConfig = {
       domains: ['lh3.googleusercontent.com'],
     },
     experimental: {
-      // serverActions: true,
-      serverComponentsExternalPackages: ["mongoose"]
+      serverActions: true,
+      serverComponentsExternalPackages: ['@prisma/client']
     },
   }
   
