@@ -37,8 +37,8 @@ export class GoogleCalendarService {
   async createEvent(eventData: {
     summary: string;
     description?: string;
-    start: { dateTime: string };
-    end: { dateTime: string };
+    start: { dateTime: string, timeZone: string };
+    end: { dateTime: string, timeZone: string };
     location?: string;
   }) {
     const calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });

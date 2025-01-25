@@ -10,6 +10,7 @@ import { CalendarHeader } from './CalendarHeader';
 // import { CalendarSidebar } from './CalendarSidebar';
 import type { CalendarEvent } from '@/types/calendar';
 
+
 export const Calendar = () => {
   const {
     currentDate,

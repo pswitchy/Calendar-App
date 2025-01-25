@@ -71,7 +71,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
 
   const createEventMutation = useMutation({
     mutationFn: async (data: EventFormData) => {
-      const eventData: Partial<CalendarEvent> = {
+      const eventData = {
         title: data.title,
         description: data.description,
         startTime: new Date(`${data.startDate}T${data.startTime}`).toISOString(),
@@ -79,11 +79,8 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         location: data.location,
         isAllDay: data.isAllDay,
         color: data.color,
-        createdBy: 'parthsharma-git',
-        createdAt: currentDateTime,
-        updatedAt: currentDateTime,
       };
-
+  
       const response = await fetch('/api/events', {
         method: 'POST',
         headers: {
@@ -91,25 +88,28 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         },
         body: JSON.stringify(eventData),
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to create event');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to create event');
       }
-
+  
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       toast({
-        title: 'Event created',
-        description: 'Your event has been successfully created.',
+        title: 'Success',
+        description: 'Event created successfully',
+        variant: 'default',
       });
       handleClose();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: 'Error',
-        description: 'Failed to create event. Please try again.',
+        description: error.message || 'Failed to create event',
+        variant: 'error',
       });
       console.error('Error creating event:', error);
     },

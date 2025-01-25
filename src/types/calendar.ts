@@ -1,21 +1,19 @@
 import { User } from "@prisma/client";
 
 export interface CalendarEvent {
-    id: string;
-    title: string;
-    description?: string;
-    startTime: string | Date;
-    endTime: string | Date;
-    location?: string;
-    category?: string;
-    color?: string;
-    isAllDay?: boolean;
-    googleCalendarEventId?: string;
-    userId: string;
-    createdAt: string | Date;
-    updatedAt: string | Date;
-    createdBy: string;
-    updatedBy?: string;
+  id: string;
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime: string;
+  location?: string;
+  isAllDay: boolean;
+  color?: string;
+  googleCalendarEventId?: string;
+  userId: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface EventAttendee {
