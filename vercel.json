@@ -1,0 +1,15 @@
+{
+    "buildCommand": "npm run build",
+    "installCommand": "npm install",
+    "framework": "nextjs",
+    "builds": [
+      {
+        "src": "next.config.js",
+        "use": "@vercel/next"
+      }
+    ],
+    "env": {
+      "NEXTAUTH_URL": "https://${VERCEL_URL}",
+      "VERCEL_URL": "${VERCEL_URL}"
+    }
+  }
