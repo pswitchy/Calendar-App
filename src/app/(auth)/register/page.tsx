@@ -32,7 +32,7 @@ import {
   AlertDescription,
 } from '@/components/ui/alert';
 
-import { useCustomToast } from '@/components/ui/toast';
+import { useCustomToast } from '@/components/ui/useCustomToast';
 import { cn } from '@/lib/utils';
 
 const registerSchema = z.object({

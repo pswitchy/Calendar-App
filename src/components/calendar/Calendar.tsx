@@ -10,7 +10,6 @@ import { CalendarHeader } from './CalendarHeader';
 // import { CalendarSidebar } from './CalendarSidebar';
 import type { CalendarEvent } from '@/types/calendar';
 
-
 export const Calendar = () => {
   const {
     currentDate,
@@ -64,14 +63,14 @@ export const Calendar = () => {
       )} */}
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <CalendarHeader
+        {/* <CalendarHeader
           currentDate={currentDate}
           isSidebarOpen={isSidebarOpen}
           onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
           onPrevMonth={navigateToPrevious}
           onNextMonth={navigateToNext}
           onToday={navigateToToday}
-        />
+        /> */}
         
         <div className="flex-1 overflow-auto">
           <div className="grid grid-cols-7 gap-px bg-gray-200">
