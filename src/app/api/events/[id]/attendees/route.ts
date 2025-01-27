@@ -7,13 +7,10 @@ import { z } from 'zod';
 import { Resend } from 'resend';
 import { ApiError, handleApiError } from '@/lib/api-utils';
 
-// Initialize Resend with non-null assertion
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-// Validation schemas
-const paramsSchema = z.object({
-  id: z.string().min(1, 'Event ID is required'),
-});
+// Updated schema for direct ID validation
+const eventIdSchema = z.string().min(1, 'Event ID is required');
 
 const attendeeSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -33,8 +30,6 @@ interface EventWithUser {
   };
 }
 
-
-// Shared authorization check
 async function verifyEventAccess(eventId: string, userId: string, requiredRole?: 'OWNER') {
   const event = await prisma.event.findFirst({
     where: {
@@ -62,47 +57,56 @@ async function verifyEventAccess(eventId: string, userId: string, requiredRole?:
   return event;
 }
 
-// export async function GET(_request: Request, params: { id: string }) {
-//   try {
-//     const { id } = paramsSchema.parse(params);
-//     const session = await getServerSession(authOptions);
-    
-//     if (!session?.user?.id) {
-//       throw new ApiError(401, 'Authentication required');
-//     }
+// Helper function to extract event ID from URL
+function extractEventId(url: string): string {
+  const match = new URL(url).pathname.match(/^\/api\/events\/([^/]+)\/attendees/);
+  if (!match) throw new ApiError(400, 'Invalid URL structure');
+  return match[1];
+}
 
-//     await verifyEventAccess(id, session.user.id);
-
-//     const attendees = await prisma.eventAttendee.findMany({
-//       where: { eventId: id },
-//       include: {
-//         user: {
-//           select: { id: true, name: true, email: true, image: true }
-//         }
-//       },
-//       orderBy: { createdAt: 'asc' }
-//     });
-
-//     await prisma.userActivity.create({
-//       data: {
-//         userId: session.user.id,
-//         type: 'VIEW_ATTENDEES',
-//         details: `Viewed attendees for event ${id}`,
-//         createdAt: new Date(),
-//         createdBy: session.user.email || 'system'
-//       }
-//     });
-
-//     return NextResponse.json(attendees);
-
-//   } catch (error) {
-//     return handleApiError(error);
-//   }
-// }
-
-export async function POST(request: Request, params: { id: string }) {
+export async function GET(request: Request) {
   try {
-    const { id } = paramsSchema.parse(params);
+    const id = extractEventId(request.url);
+    const eventId = eventIdSchema.parse(id);
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      throw new ApiError(401, 'Authentication required');
+    }
+
+    await verifyEventAccess(eventId, session.user.id);
+
+    const attendees = await prisma.eventAttendee.findMany({
+      where: { eventId },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, image: true }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    await prisma.userActivity.create({
+      data: {
+        userId: session.user.id,
+        type: 'VIEW_ATTENDEES',
+        details: `Viewed attendees for event ${eventId}`,
+        createdAt: new Date(),
+        createdBy: session.user.email || 'system'
+      }
+    });
+
+    return NextResponse.json(attendees);
+
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const id = extractEventId(request.url);
+    const eventId = eventIdSchema.parse(id);
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -112,10 +116,10 @@ export async function POST(request: Request, params: { id: string }) {
     const body = await request.json();
     const { email } = attendeeSchema.parse(body);
 
-    const event = await verifyEventAccess(id, session.user.id, 'OWNER');
+    const event = await verifyEventAccess(eventId, session.user.id, 'OWNER');
 
     const existingAttendee = await prisma.eventAttendee.findUnique({
-      where: { eventId_userId: { eventId: id, userId: session.user.id } }
+      where: { eventId_userId: { eventId, userId: session.user.id } }
     });
 
     if (existingAttendee) {
@@ -125,7 +129,7 @@ export async function POST(request: Request, params: { id: string }) {
     const [newAttendee] = await prisma.$transaction([
       prisma.eventAttendee.create({
         data: {
-          eventId: id,
+          eventId,
           email,
           userId: session.user.id,
           createdAt: new Date(),
@@ -136,7 +140,7 @@ export async function POST(request: Request, params: { id: string }) {
         data: {
           userId: session.user.id,
           type: 'ADD_ATTENDEE',
-          details: `Added ${email} to event ${id}`,
+          details: `Added ${email} to event ${eventId}`,
           createdAt: new Date(),
           createdBy: session.user.email || 'system'
         }
@@ -156,9 +160,10 @@ export async function POST(request: Request, params: { id: string }) {
   }
 }
 
-export async function DELETE(request: Request, params: { id: string }) {
+export async function DELETE(request: Request) {
   try {
-    const { id } = paramsSchema.parse(params);
+    const id = extractEventId(request.url);
+    const eventId = eventIdSchema.parse(id);
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -172,17 +177,17 @@ export async function DELETE(request: Request, params: { id: string }) {
       throw new ApiError(400, 'Email parameter required');
     }
 
-    await verifyEventAccess(id, session.user.id, 'OWNER');
+    await verifyEventAccess(eventId, session.user.id, 'OWNER');
 
     await prisma.$transaction([
       prisma.eventAttendee.deleteMany({
-        where: { eventId: id, email }
+        where: { eventId, email }
       }),
       prisma.userActivity.create({
         data: {
           userId: session.user.id,
           type: 'REMOVE_ATTENDEE',
-          details: `Removed ${email} from event ${id}`,
+          details: `Removed ${email} from event ${eventId}`,
           createdAt: new Date(),
           createdBy: session.user.email || 'system'
         }
@@ -223,6 +228,5 @@ async function sendEventInvitation(event: EventWithUser, recipientEmail: string)
 
   } catch (error) {
     console.error('Failed to send invitation:', error);
-    // Consider logging failed email attempts to your database
   }
 }
