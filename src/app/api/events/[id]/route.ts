@@ -3,10 +3,12 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { handleApiError, ApiError} from '@/lib/api-utils';
+import { handleApiError, ApiError } from '@/lib/api-utils';
 import { GoogleCalendarService } from '@/lib/google-calendar';
 import { z } from 'zod';
 
+// Validation schemas
+const eventIdSchema = z.string().min(1, 'Event ID is required');
 const updateEventSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
@@ -16,19 +18,26 @@ const updateEventSchema = z.object({
   category: z.string().optional(),
 });
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+// Helper function to extract event ID from URL
+function extractEventId(url: string): string {
+  const match = new URL(url).pathname.match(/^\/api\/events\/([^/]+)/);
+  if (!match) throw new ApiError(400, 'Invalid URL structure');
+  return match[1];
+}
+
+export async function GET(request: Request) {
   try {
+    const id = extractEventId(request.url);
+    const eventId = eventIdSchema.parse(id);
     const session = await getServerSession(authOptions);
+    
     if (!session?.user) {
       throw new ApiError(401, 'Unauthorized');
     }
 
     const event = await prisma.event.findFirst({
       where: {
-        id: params.id,
+        id: eventId,
         userId: session.user.id,
       },
     });
@@ -53,12 +62,12 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: Request) {
   try {
+    const id = extractEventId(request.url);
+    const eventId = eventIdSchema.parse(id);
     const session = await getServerSession(authOptions);
+    
     if (!session?.user) {
       throw new ApiError(401, 'Unauthorized');
     }
@@ -68,7 +77,7 @@ export async function PATCH(
 
     const event = await prisma.event.update({
       where: {
-        id: params.id,
+        id: eventId,
         userId: session.user.id,
       },
       data: {
@@ -103,19 +112,19 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request) {
   try {
+    const id = extractEventId(request.url);
+    const eventId = eventIdSchema.parse(id);
     const session = await getServerSession(authOptions);
+    
     if (!session?.user) {
       throw new ApiError(401, 'Unauthorized');
     }
 
     const event = await prisma.event.delete({
       where: {
-        id: params.id,
+        id: eventId,
         userId: session.user.id,
       },
     });
