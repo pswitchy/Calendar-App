@@ -4,7 +4,10 @@ const nextConfig = {
       domains: ['lh3.googleusercontent.com'],
     },
     experimental: {
-      serverActions: true
+      serverActions: true,
+    },
+    generateBuildId: async () => {
+      return process.env.RENDER_GIT_COMMIT || 'custom-build-id';
     },
   }
   
