@@ -7,8 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { signIn } from 'next-auth/react';
-import {  
-  Chrome, 
+import {   
   Eye, 
   EyeOff, 
   Loader2,
@@ -123,25 +122,25 @@ export default function RegisterPage() {
 
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <Card className="w-full max-w-lg">
-        <CardHeader className="space-y-1">
+      <Card className="w-full max-w-lg ">
+        <CardHeader className="space-y-1 items-center justify-center">
           <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
           <CardDescription>
             Enter your information below to create your account
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+            <div className="flex justify-center">
             <Button
               variant="outline"
               onClick={() => handleOAuthSignIn('google')}
               disabled={isLoading}
-              className="w-full"
+              className="w-full max-w-xs items-center justify-center gap-2"
             >
               <img className="mr-2 h-4 w-4" src="https://www.vectorlogo.zone/logos/google/google-icon.svg" alt="Google logo" />
               Google
             </Button>
-          </div>
+            </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">

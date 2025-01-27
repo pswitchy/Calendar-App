@@ -2,7 +2,7 @@
 'use client';
 
 // import { useQuery } from '@tanstack/react-query';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns';
 import { CalendarDay } from './CalendarDay';
 import { useCalendar } from './CalendarContext';

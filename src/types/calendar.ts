@@ -4,8 +4,9 @@ export interface CalendarEvent {
   id: string;
   title: string;
   description?: string;
-  startTime: string;
-  endTime: string;
+  startTime: Date | string;
+  endTime: Date | string;
+  colorId: string | number;
   location?: string;
   isAllDay: boolean;
   color?: string;

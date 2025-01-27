@@ -12,20 +12,37 @@ interface EventDetailsProps {
   onClose: () => void;
 }
 
+interface Attendee {
+  id: string;
+  user: {
+    name: string;
+  };
+  role: string;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  startTime: string;
+  endTime: string;
+  location?: string;
+  description?: string;
+}
+
 export const EventDetails = ({ eventId, isOpen, onClose }: EventDetailsProps) => {
-  const { data: event, isLoading } = useQuery({
+  const { data: event, isLoading } = useQuery<Event>({
     queryKey: ['event', eventId],
     queryFn: () => fetch(`/api/events/${eventId}`).then(res => res.json()),
     enabled: isOpen,
   });
 
-  const { data: attendees } = useQuery({
+  const { data: attendees } = useQuery<Attendee[]>({
     queryKey: ['event-attendees', eventId],
     queryFn: () => fetch(`/api/events/${eventId}/attendees`).then(res => res.json()),
     enabled: isOpen,
   });
 
-  if (isLoading) {
+  if (isLoading || !event) {
     return null;
   }
 
@@ -33,38 +50,38 @@ export const EventDetails = ({ eventId, isOpen, onClose }: EventDetailsProps) =>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{event?.title}</DialogTitle>
+          <DialogTitle>{event.title}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
           <div className="flex items-center space-x-2 text-gray-600">
             <Calendar className="w-4 h-4" />
-            <span>{format(new Date(event?.startTime), 'PPPP')}</span>
+            <span>{format(new Date(event.startTime), 'PPPP')}</span>
           </div>
 
           <div className="flex items-center space-x-2 text-gray-600">
             <Clock className="w-4 h-4" />
             <span>
-              {format(new Date(event?.startTime), 'p')} -{' '}
-              {format(new Date(event?.endTime), 'p')}
+              {format(new Date(event.startTime), 'p')} -{' '}
+              {format(new Date(event.endTime), 'p')}
             </span>
           </div>
 
-          {event?.location && (
+          {event.location && (
             <div className="flex items-center space-x-2 text-gray-600">
               <MapPin className="w-4 h-4" />
               <span>{event.location}</span>
             </div>
           )}
 
-          {attendees?.length > 0 && (
+          {attendees && attendees.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-gray-600">
                 <Users className="w-4 h-4" />
                 <span>Attendees</span>
               </div>
               <div className="pl-6">
-                {attendees.map((attendee: any) => (
+                {attendees.map((attendee) => (
                   <div key={attendee.id} className="flex items-center space-x-2">
                     <span>{attendee.user.name}</span>
                     <span className="text-sm text-gray-500">
@@ -76,7 +93,7 @@ export const EventDetails = ({ eventId, isOpen, onClose }: EventDetailsProps) =>
             </div>
           )}
 
-          {event?.description && (
+          {event.description && (
             <div className="mt-4 text-gray-600">
               <p>{event.description}</p>
             </div>

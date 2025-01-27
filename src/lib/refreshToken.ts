@@ -1,6 +1,11 @@
 import { prisma } from '@/lib/prisma';
 
-export async function refreshAccessToken(token: any) {
+interface Token {
+  id: string;
+  [key: string]: unknown;
+}
+
+export async function refreshAccessToken(token: Token) {
   try {
     const account = await prisma.account.findFirst({
       where: {

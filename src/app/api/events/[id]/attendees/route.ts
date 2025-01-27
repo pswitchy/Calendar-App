@@ -151,8 +151,13 @@ export async function POST(
       },
     });
 
+    // Ensure user name and email are not null
+    if (!event.user.name || !event.user.email) {
+      throw new ApiError(400, 'Event organizer name or email is missing');
+    }
+
     // Send invitation email
-    await sendEventInvitation(event, email);
+    await sendEventInvitation(event as EventWithUser, email);
 
     await prisma.userActivity.create({
       data: {
@@ -233,7 +238,19 @@ export async function DELETE(
   }
 }
 
-async function sendEventInvitation(event: any, recipientEmail: string) {
+interface EventWithUser {
+  id: string;
+  title: string;
+  startTime: Date;
+  location?: string | null;
+  description?: string | null;
+  user: {
+    name: string;
+    email: string;
+  };
+}
+
+async function sendEventInvitation(event: EventWithUser, recipientEmail: string) {
   try {
     const response = await resend.emails.send({
       from: 'Calendar App <noreply@yourdomain.com>',

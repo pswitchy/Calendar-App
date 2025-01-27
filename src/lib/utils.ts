@@ -2,6 +2,8 @@ import { ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { format, parseISO, isValid } from 'date-fns';
 import { TIME_ZONES, EVENT_COLORS } from './constants';
+import { CalendarEvent } from '@/types/calendar';
+
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -23,7 +25,7 @@ export function generateEventColor(): string {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
-export function createGoogleCalendarEvent(event: any) {
+export function createGoogleCalendarEvent(event: CalendarEvent) {
   return {
     summary: event.title,
     description: event.description,
@@ -40,13 +42,13 @@ export function createGoogleCalendarEvent(event: any) {
   };
 }
 
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
+export function debounce<Args extends unknown[], Return>(
+  func: (...args: Args) => Return,
   wait: number
-): (...args: Parameters<T>) => void {
+): (...args: Args) => void {
   let timeout: NodeJS.Timeout;
 
-  return (...args: Parameters<T>) => {
+  return (...args: Args) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };

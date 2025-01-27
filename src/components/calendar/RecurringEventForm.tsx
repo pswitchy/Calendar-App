@@ -6,12 +6,14 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { generateRecurringDates } from '@/lib/utils';
 
+type FrequencyType = 'daily' | 'weekly' | 'monthly';
+
 interface RecurringEventFormProps {
   onSubmit: (dates: Date[]) => void;
 }
 
 export const RecurringEventForm = ({ onSubmit }: RecurringEventFormProps) => {
-  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [frequency, setFrequency] = useState<FrequencyType>('weekly');
   const [count, setCount] = useState(5);
   const [startDate] = useState(new Date('2025-01-21T11:12:32Z'));
 
@@ -27,7 +29,7 @@ export const RecurringEventForm = ({ onSubmit }: RecurringEventFormProps) => {
         <label className="block text-sm font-medium mb-1">Frequency</label>
         <select
           value={frequency}
-          onChange={(e) => setFrequency(e.target.value as any)}
+          onChange={(e) => setFrequency(e.target.value as FrequencyType)}
           className="w-full rounded-md border border-gray-300 p-2"
         >
           <option value="daily">Daily</option>

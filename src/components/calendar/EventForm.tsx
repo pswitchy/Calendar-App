@@ -17,19 +17,11 @@ const eventSchema = z.object({
   color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Invalid color format').optional(),
 });
 
+type EventFormValues = z.infer<typeof eventSchema>;
+
 interface EventFormProps {
-  onSubmit: (data: any) => void;
-  initialData?: {
-    title?: string;
-    description?: string;
-    startDate?: string;
-    startTime?: string;
-    endDate?: string;
-    endTime?: string;
-    location?: string;
-    category?: string;
-    color?: string;
-  };
+  onSubmit: (data: EventFormValues) => void;
+  initialData?: Partial<EventFormValues>;
 }
 
 export const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialData = {} }) => {
@@ -37,7 +29,7 @@ export const EventForm: React.FC<EventFormProps> = ({ onSubmit, initialData = {}
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm({
+  } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: initialData,
   });

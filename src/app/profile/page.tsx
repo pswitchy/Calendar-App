@@ -73,10 +73,11 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       try {
         const response = await fetch('/api/profile');
-        const data = await response.json();
+        const data: ProfileFormData = await response.json();
         
-        Object.entries(data).forEach(([key, value]) => {
-          setValue(key as any, value);
+        // Type-safe way to set form values
+        (Object.keys(data) as Array<keyof ProfileFormData>).forEach((key) => {
+          setValue(key, data[key]);
         });
         
         setIsLoading(false);
@@ -168,8 +169,8 @@ export default function ProfilePage() {
                     <Input
                       id="email"
                       {...register('email')}
-                      error={!!errors.name}
-                      helperText={errors.name?.message}
+                      error={!!errors.email}
+                      helperText={errors.email?.message}
                     />
                   </div>
 
@@ -186,7 +187,6 @@ export default function ProfilePage() {
                         <SelectItem value="UTC">UTC</SelectItem>
                         <SelectItem value="America/New_York">Eastern Time</SelectItem>
                         <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                        {/* Add more timezones as needed */}
                       </SelectContent>
                     </Select>
                   </div>
@@ -250,7 +250,7 @@ export default function ProfilePage() {
                     <Label htmlFor="defaultView">Default View</Label>
                     <Select
                       value={watch('calendar.defaultView')}
-                      onValueChange={(value: any) =>
+                      onValueChange={(value: 'month' | 'week' | 'day') =>
                         setValue('calendar.defaultView', value, { shouldDirty: true })
                       }
                     >

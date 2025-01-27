@@ -1,5 +1,3 @@
-import { PushSubscription } from 'web-push';
-
 export class NotificationService {
   static async requestPermission() {
     const permission = await Notification.requestPermission();

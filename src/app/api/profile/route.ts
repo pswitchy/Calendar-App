@@ -31,7 +31,7 @@ export async function GET() {
       throw new ApiError(404, 'User not found');
     }
 
-    const { password, ...userWithoutPassword } = user;
+    const { ...userWithoutPassword } = user;
     return NextResponse.json(userWithoutPassword);
   } catch (error) {
     return handleApiError(error);
@@ -69,7 +69,7 @@ export async function PATCH(request: Request) {
       },
     });
 
-    const { password, ...userWithoutPassword } = user;
+    const { ...userWithoutPassword } = user;
     return NextResponse.json(userWithoutPassword);
   } catch (error) {
     return handleApiError(error);
