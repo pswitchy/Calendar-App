@@ -1,5 +1,5 @@
 // src/app/api/events/[id]/attendees/route.ts
-import { NextResponse, NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -7,11 +7,11 @@ import { z } from 'zod';
 import { Resend } from 'resend';
 import { ApiError, handleApiError } from '@/lib/api-utils';
 
-// Initialize Resend for email
-const resend = new Resend('re_123456789');
-
-const CURRENT_DATETIME = '2025-01-27 20:02:50';
+const CURRENT_DATETIME = '2025-01-27 20:17:28';
 const CURRENT_USER = 'parthsharma-git';
+
+// Initialize Resend for email
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Validation schemas
 const paramsSchema = z.object({
@@ -24,13 +24,25 @@ const attendeeSchema = z.object({
   status: z.enum(['PENDING', 'ACCEPTED', 'DECLINED', 'TENTATIVE']).default('PENDING'),
 });
 
+interface EventWithUser {
+  id: string;
+  title: string;
+  startTime: Date;
+  location?: string | null;
+  description?: string | null;
+  user: {
+    name: string;
+    email: string;
+  };
+}
+
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     // Validate params
-    const { id } = paramsSchema.parse(params);
+    const { id } = paramsSchema.parse(context.params);
 
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -84,7 +96,7 @@ export async function GET(
         type: 'VIEW_ATTENDEES',
         details: `Viewed attendees for event ${id}`,
         createdAt: new Date(CURRENT_DATETIME),
-        createdBy: session.user.email || CURRENT_USER,
+        createdBy: CURRENT_USER,
       },
     });
 
@@ -95,10 +107,12 @@ export async function GET(
 }
 
 export async function POST(
-  request: Request,
-  { params }: { params: { [key: string]: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
+    const { id } = paramsSchema.parse(context.params);
+
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       throw new ApiError(401, 'Unauthorized');
@@ -110,7 +124,7 @@ export async function POST(
     // Check if user has permission to add attendees
     const event = await prisma.event.findFirst({
       where: {
-        id: params.id,
+        id,
         OR: [
           { userId: session.user.id },
           {
@@ -140,7 +154,7 @@ export async function POST(
     // Check if attendee already exists
     const existingAttendee = await prisma.eventAttendee.findFirst({
       where: {
-        eventId: params.id,
+        eventId: id,
         email: email,
       },
     });
@@ -152,13 +166,13 @@ export async function POST(
     // Create new attendee
     const attendee = await prisma.eventAttendee.create({
       data: {
-        eventId: params.id,
+        eventId: id,
         email,
         role,
         status,
         userId: session.user.id,
-        createdAt: new Date(),
-        createdBy: session.user.email || 'unknown',
+        createdAt: new Date(CURRENT_DATETIME),
+        createdBy: CURRENT_USER,
       },
     });
 
@@ -170,13 +184,14 @@ export async function POST(
     // Send invitation email
     await sendEventInvitation(event as EventWithUser, email);
 
+    // Log user activity
     await prisma.userActivity.create({
       data: {
         userId: session.user.id,
         type: 'ADD_ATTENDEE',
-        details: `Added attendee ${email} to event ${params.id}`,
-        createdAt: new Date(),
-        createdBy: session.user.email || 'unknown',
+        details: `Added attendee ${email} to event ${id}`,
+        createdAt: new Date(CURRENT_DATETIME),
+        createdBy: CURRENT_USER,
       },
     });
 
@@ -187,10 +202,12 @@ export async function POST(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { [key: string]: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
+    const { id } = paramsSchema.parse(context.params);
+
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       throw new ApiError(401, 'Unauthorized');
@@ -206,7 +223,7 @@ export async function DELETE(
     // Check if user has permission to remove attendees
     const event = await prisma.event.findFirst({
       where: {
-        id: params.id,
+        id,
         OR: [
           { userId: session.user.id },
           {
@@ -228,18 +245,19 @@ export async function DELETE(
     // Remove attendee
     await prisma.eventAttendee.deleteMany({
       where: {
-        eventId: params.id,
+        eventId: id,
         email: attendeeEmail,
       },
     });
 
+    // Log user activity
     await prisma.userActivity.create({
       data: {
         userId: session.user.id,
         type: 'REMOVE_ATTENDEE',
-        details: `Removed attendee ${attendeeEmail} from event ${params.id}`,
-        createdAt: new Date(),
-        createdBy: session.user.email || 'unknown',
+        details: `Removed attendee ${attendeeEmail} from event ${id}`,
+        createdAt: new Date(CURRENT_DATETIME),
+        createdBy: CURRENT_USER,
       },
     });
 
@@ -247,18 +265,6 @@ export async function DELETE(
   } catch (error) {
     return handleApiError(error);
   }
-}
-
-interface EventWithUser {
-  id: string;
-  title: string;
-  startTime: Date;
-  location?: string | null;
-  description?: string | null;
-  user: {
-    name: string;
-    email: string;
-  };
 }
 
 async function sendEventInvitation(event: EventWithUser, recipientEmail: string) {
