@@ -62,43 +62,43 @@ async function verifyEventAccess(eventId: string, userId: string, requiredRole?:
   return event;
 }
 
-export async function GET(_request: Request, params: { id: string }) {
-  try {
-    const { id } = paramsSchema.parse(params);
-    const session = await getServerSession(authOptions);
+// export async function GET(_request: Request, params: { id: string }) {
+//   try {
+//     const { id } = paramsSchema.parse(params);
+//     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.id) {
-      throw new ApiError(401, 'Authentication required');
-    }
+//     if (!session?.user?.id) {
+//       throw new ApiError(401, 'Authentication required');
+//     }
 
-    await verifyEventAccess(id, session.user.id);
+//     await verifyEventAccess(id, session.user.id);
 
-    const attendees = await prisma.eventAttendee.findMany({
-      where: { eventId: id },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, image: true }
-        }
-      },
-      orderBy: { createdAt: 'asc' }
-    });
+//     const attendees = await prisma.eventAttendee.findMany({
+//       where: { eventId: id },
+//       include: {
+//         user: {
+//           select: { id: true, name: true, email: true, image: true }
+//         }
+//       },
+//       orderBy: { createdAt: 'asc' }
+//     });
 
-    await prisma.userActivity.create({
-      data: {
-        userId: session.user.id,
-        type: 'VIEW_ATTENDEES',
-        details: `Viewed attendees for event ${id}`,
-        createdAt: new Date(),
-        createdBy: session.user.email || 'system'
-      }
-    });
+//     await prisma.userActivity.create({
+//       data: {
+//         userId: session.user.id,
+//         type: 'VIEW_ATTENDEES',
+//         details: `Viewed attendees for event ${id}`,
+//         createdAt: new Date(),
+//         createdBy: session.user.email || 'system'
+//       }
+//     });
 
-    return NextResponse.json(attendees);
+//     return NextResponse.json(attendees);
 
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+//   } catch (error) {
+//     return handleApiError(error);
+//   }
+// }
 
 export async function POST(request: Request, params: { id: string }) {
   try {
