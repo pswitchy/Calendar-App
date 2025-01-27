@@ -1,5 +1,5 @@
 // src/app/api/events/[id]/attendees/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -18,8 +18,8 @@ const attendeeSchema = z.object({
 });
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: Request,
+  { params }: { params: { [key: string]: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -84,8 +84,8 @@ export async function GET(
 }
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: { [key: string]: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -176,8 +176,8 @@ export async function POST(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: { [key: string]: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -185,8 +185,8 @@ export async function DELETE(
       throw new ApiError(401, 'Unauthorized');
     }
 
-    const { searchParams } = new URL(request.url);
-    const attendeeEmail = searchParams.get('email');
+    const url = new URL(request.url);
+    const attendeeEmail = url.searchParams.get('email');
 
     if (!attendeeEmail) {
       throw new ApiError(400, 'Attendee email is required');
