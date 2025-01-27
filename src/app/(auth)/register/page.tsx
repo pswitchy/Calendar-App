@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -137,7 +138,7 @@ export default function RegisterPage() {
               disabled={isLoading}
               className="w-full max-w-xs items-center justify-center gap-2"
             >
-              <img className="mr-2 h-4 w-4" src="https://www.vectorlogo.zone/logos/google/google-icon.svg" alt="Google logo" />
+              <Image className="mr-2 h-4 w-4" src="https://www.vectorlogo.zone/logos/google/google-icon.svg" alt="Google logo" width={16} height={16} />
               Google
             </Button>
             </div>
