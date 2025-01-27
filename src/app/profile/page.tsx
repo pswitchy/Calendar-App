@@ -5,7 +5,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Settings, Bell, Calendar, Clock, Globe, Shield } from 'lucide-react';
+import { User, Bell, Calendar } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useCustomToast } from '@/components/ui/useCustomToast';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -40,12 +40,10 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
-  const { theme, setTheme } = useTheme();
+  const { status } = useSession();
+  useTheme();
   const toast = useCustomToast();
   const [isLoading, setIsLoading] = useState(true);
-  const currentDateTime = new Date('2025-01-22T09:07:43Z');
-  const userId = 'parthsharma-git';
 
   const {
     register,

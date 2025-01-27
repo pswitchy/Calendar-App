@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ChevronRight, LucideIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import React from 'react';
 
 interface SidebarLinkProps {
   href: string;
@@ -30,7 +31,7 @@ export const SidebarLink: FC<SidebarLinkProps> = ({
 }) => {
   const pathname = usePathname();
   const isActive = pathname === href || pathname?.startsWith(`${href}/`);
-  const currentDateTime = new Date('2025-01-21T15:25:25Z');
+  // const currentDateTime = new Date('2025-01-21T15:25:25Z');
 
   const LinkContent = (
     <div
@@ -195,6 +196,7 @@ export function ExpandableSection({
   );
 }
 
-function useState(defaultExpanded: boolean): [any, any] {
-    throw new Error('Function not implemented.');
+function useState(defaultExpanded: boolean): [boolean, (value: boolean) => void] {
+  const [state, setState] = React.useState(defaultExpanded);
+  return [state, setState];
 }

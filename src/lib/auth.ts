@@ -82,7 +82,7 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ account, profile }) {
       if (account?.provider === "google") {
         if (!profile?.email) {
           return false;
@@ -114,7 +114,7 @@ export const authOptions: NextAuthOptions = {
     }
   },
   events: {
-    async signIn({ user, account, isNewUser }) {
+    async signIn({ user, isNewUser }) {
       if (isNewUser) {
         // Handle new user registration
         await prisma.userProfile.create({

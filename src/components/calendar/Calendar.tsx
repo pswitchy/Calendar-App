@@ -1,12 +1,12 @@
 // src/components/calendar/Calendar.tsx
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+// import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns';
 import { CalendarDay } from './CalendarDay';
 import { useCalendar } from './CalendarContext';
-import { CalendarHeader } from './CalendarHeader';
+// import { CalendarHeader } from './CalendarHeader';
 // import { CalendarSidebar } from './CalendarSidebar';
 import type { CalendarEvent } from '@/types/calendar';
 
@@ -15,12 +15,9 @@ export const Calendar = () => {
     currentDate,
     events,
     isLoading,
-    navigateToNext,
-    navigateToPrevious,
-    navigateToToday,
   } = useCalendar();
   
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const days = useMemo(() => 
     eachDayOfInterval({

@@ -13,7 +13,7 @@ interface RecurringEventFormProps {
 export const RecurringEventForm = ({ onSubmit }: RecurringEventFormProps) => {
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [count, setCount] = useState(5);
-  const [startDate, setStartDate] = useState(new Date('2025-01-21T11:12:32Z'));
+  const [startDate] = useState(new Date('2025-01-21T11:12:32Z'));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -33,7 +33,7 @@ const CalendarContext = createContext<CalendarContextType | undefined>(undefined
 
 export function CalendarProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   
   // Initialize state with current timestamp
   const [currentDate, setCurrentDate] = useState<Date>(CURRENT_TIMESTAMP);
@@ -94,19 +94,8 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     enabled: status === 'authenticated',
   });
 
-  // Navigation functions
-  const navigateToToday = useCallback(() => {
-    setCurrentDate(CURRENT_TIMESTAMP);
-    setSelectedDate(CURRENT_TIMESTAMP);
-  }, []);
 
-  const navigateToNext = useCallback(() => {
-    setCurrentDate(prev => addMonths(prev, 1));
-  }, []);
 
-  const navigateToPrevious = useCallback(() => {
-    setCurrentDate(prev => subMonths(prev, 1));
-  }, []);
 
   // Event management functions
   const createEvent = async (eventData: Partial<CalendarEvent>): Promise<CalendarEvent> => {

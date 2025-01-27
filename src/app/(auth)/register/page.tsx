@@ -26,12 +26,6 @@ import {
   CardContent, 
   CardFooter 
 } from '@/components/ui/card';
-
-import {
-  Alert,
-  AlertDescription,
-} from '@/components/ui/alert';
-
 import { useCustomToast } from '@/components/ui/useCustomToast';
 import { cn } from '@/lib/utils';
 
@@ -65,14 +59,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const currentDateTime = new Date('2025-01-22T12:55:03Z');
-  const userId = 'parthsharma-git';
 
   const {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
@@ -90,7 +82,6 @@ export default function RegisterPage() {
     try {
       setIsLoading(true);
       
-      // Register user
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,23 +92,18 @@ export default function RegisterPage() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Registration failed');
-      }
+      if (!response.ok) throw new Error('Registration failed');
 
-      // Sign in the user
       const result = await signIn('credentials', {
         email: data.email,
         password: data.password,
         redirect: false,
       });
 
-      if (result?.error) {
-        throw new Error(result.error);
-      }
+      if (result?.error) throw new Error(result.error);
 
       toast.success('Registration successful!');
-      router.push('/dashboard');
+      router.push('./dashboard/ActivityFeed');
     } catch (error) {
       console.error('Registration error:', error);
       toast.error('Registration failed. Please try again.');
@@ -145,7 +131,6 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* OAuth Buttons */}
           <div className="grid grid-cols-2 gap-4">
             <Button
               variant="outline"
@@ -153,7 +138,7 @@ export default function RegisterPage() {
               disabled={isLoading}
               className="w-full"
             >
-              <Chrome className="mr-2 h-4 w-4" />
+              <img className="mr-2 h-4 w-4" src="https://www.vectorlogo.zone/logos/google/google-icon.svg" alt="Google logo" />
               Google
             </Button>
           </div>
@@ -170,13 +155,12 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Name Field */}
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="John Doe"
+                placeholder="Name"
                 {...register('name')}
                 error={!!errors.name}
                 helperText={errors.name?.message}
@@ -184,7 +168,6 @@ export default function RegisterPage() {
               />
             </div>
 
-            {/* Email Field */}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -192,13 +175,12 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="john@example.com"
                 {...register('email')}
-                error={!!errors.name}
-                helperText={errors.name?.message}
+                error={!!errors.email}
+                helperText={errors.email?.message}
                 disabled={isLoading}
               />
             </div>
 
-            {/* Password Field */}
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -206,8 +188,8 @@ export default function RegisterPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
-                  error={!!errors.name}
-                  helperText={errors.name?.message}
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
                   disabled={isLoading}
                 />
                 <Button
@@ -225,7 +207,6 @@ export default function RegisterPage() {
                 </Button>
               </div>
 
-              {/* Password Requirements */}
               <div className="space-y-2 text-sm">
                 {passwordRequirements.map(({ regex, text }) => (
                   <div
@@ -248,7 +229,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Confirm Password Field */}
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <div className="relative">
@@ -276,7 +256,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Submit Button */}
             <Button
               type="submit"
               className="w-full"

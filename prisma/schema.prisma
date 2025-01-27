@@ -231,6 +231,9 @@ enum AttendeeRole {
   ORGANIZER
   REQUIRED
   OPTIONAL
+  OWNER
+  ATTENDEE
+  GUEST
 }
 
 enum Theme {

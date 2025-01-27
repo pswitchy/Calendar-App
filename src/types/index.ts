@@ -1,4 +1,4 @@
-import { Event, UserPreferences, User, UserActivity, Notification } from '@prisma/client';
+import { Event, UserPreferences, User, UserActivity } from '@prisma/client';
 
 export interface ExtendedUser extends User {
   preferences?: UserPreferences | null;
@@ -80,17 +80,17 @@ export interface CalendarEvent {
   updatedAt: string;
 }
 
-interface DayEvent {
-  id: string;
-  title: string;
-  description?: string;
-  startTime: string;
-  endTime: string;
-  location?: string;
-  color?: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// interface DayEvent {
+//   id: string;
+//   title: string;
+//   description?: string;
+//   startTime: string;
+//   endTime: string;
+//   location?: string;
+//   color?: string;
+//   userId: string;
+//   createdAt: string;
+//   updatedAt: string;
+// }
 
 export type { Event };

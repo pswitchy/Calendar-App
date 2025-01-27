@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const currentDateTime = new Date('2025-01-22T18:58:50Z');
-    const userId = 'parthsharma-git';
+    // const userId = 'parthsharma-git';
     
     // Validate input
     const validatedData = registerSchema.parse(body);

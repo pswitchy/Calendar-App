@@ -40,8 +40,8 @@ interface CalendarItem {
 }
 
 export function CalendarSidebar({
-  isOpen,
-  onClose,
+  // isOpen,
+  // onClose,
   className,
 }: CalendarSidebarProps) {
   const { data: session } = useSession();

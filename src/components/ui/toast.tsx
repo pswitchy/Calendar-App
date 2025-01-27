@@ -3,7 +3,7 @@
 import * as React from 'react';
 import * as ToastPrimitives from '@radix-ui/react-toast';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { X, Check, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ToastProvider = ToastPrimitives.Provider;
@@ -40,7 +40,7 @@ const toastVariants = cva(
       },
     },
     defaultVariants: {
-      variant: 'default' | 'destructive',
+      variant: 'default',
     },
   }
 );

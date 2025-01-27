@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { toast } from '@/components/ui/use-toast';
-import type { CalendarEvent } from '@/types/calendar';
+// import type { CalendarEvent } from '@/types/calendar';
 
 // Form validation schema
 const eventSchema = z.object({
@@ -43,6 +43,7 @@ interface CreateEventModalProps {
   initialDate: Date;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export const CreateEventModal: React.FC<CreateEventModalProps> = ({
@@ -52,7 +53,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
 }) => {
   const [open, setOpen] = useState(isOpen);
   const queryClient = useQueryClient();
-  const currentDateTime = new Date('2025-01-24 16:53:37');
+  // const currentDateTime = new Date();
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),

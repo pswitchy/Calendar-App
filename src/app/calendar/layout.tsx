@@ -16,12 +16,12 @@ function CalendarLayoutContent({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const toast = useCustomToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { currentDate: date, navigateToNext, navigateToPrevious, navigateToToday } = useCalendar();
-  const currentDateTime = new Date('2025-01-23 16:52:06');
+  // const currentDateTime = new Date('2025-01-23 16:52:06');
 
   useEffect(() => {
     if (status === 'unauthenticated') {

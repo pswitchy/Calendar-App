@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { handleApiError, ApiError, CONSTANTS } from '@/lib/api-utils';
+import { handleApiError, ApiError} from '@/lib/api-utils';
 import { GoogleCalendarService } from '@/lib/google-calendar';
 import { z } from 'zod';
 
@@ -104,7 +104,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   try {

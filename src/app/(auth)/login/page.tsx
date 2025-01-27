@@ -2,6 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function LoginPage() {
   return (
@@ -24,6 +25,16 @@ export default function LoginPage() {
           />
           Sign in with Google
         </button>
+
+        <div className="text-center text-sm text-gray-600">
+          Don't have an account?{' '}
+          <Link 
+            href="./register" 
+            className="font-medium text-blue-600 hover:text-blue-500"
+          >
+            Register here
+          </Link>
+        </div>
       </div>
     </div>
   );
