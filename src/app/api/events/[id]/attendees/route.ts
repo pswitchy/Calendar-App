@@ -36,15 +36,12 @@ interface EventWithUser {
   };
 }
 
-type RouteContext = {
-  params: Record<string, string | string[]>;
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
-export async function GET(request: Request, context: RouteContext) {
+export async function GET(
+  _request: Request,
+  { params }: { params: { [key: string]: string | string[] } }
+) {
   try {
-    // Validate params
-    const { id } = paramsSchema.parse({ id: context.params.id });
+    const { id } = paramsSchema.parse({ id: params.id });
 
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -107,9 +104,12 @@ export async function GET(request: Request, context: RouteContext) {
   }
 }
 
-export async function POST(request: Request, context: RouteContext) {
+export async function POST(
+  request: Request,
+  { params }: { params: { [key: string]: string | string[] } }
+) {
   try {
-    const { id } = paramsSchema.parse({ id: context.params.id });
+    const { id } = paramsSchema.parse({ id: params.id });
 
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -198,9 +198,12 @@ export async function POST(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(request: Request, context: RouteContext) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { [key: string]: string | string[] } }
+) {
   try {
-    const { id } = paramsSchema.parse({ id: context.params.id });
+    const { id } = paramsSchema.parse({ id: params.id });
 
     const session = await getServerSession(authOptions);
     if (!session?.user) {
