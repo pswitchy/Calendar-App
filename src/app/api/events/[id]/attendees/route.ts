@@ -34,7 +34,7 @@ interface EventWithUser {
 }
 
 // Proper Next.js route handler types
-type RouteParams = { params: { [key: string]: string } };
+type RouteParams = { params: { id: string } };
 
 // Shared authorization check
 async function verifyEventAccess(eventId: string, userId: string, requiredRole?: 'OWNER') {
@@ -117,7 +117,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const event = await verifyEventAccess(id, session.user.id, 'OWNER');
 
     const existingAttendee = await prisma.eventAttendee.findUnique({
-      where: { eventId_email: { eventId: id, email } }
+      where: { eventId_userId: { eventId: id, userId: session.user.id } }
     });
 
     if (existingAttendee) {
@@ -145,11 +145,11 @@ export async function POST(request: Request, { params }: RouteParams) {
       })
     ]);
 
-    if (!event.user.name || !event.user.email) {
+    if (event.user.name && event.user.email) {
+      await sendEventInvitation(event as EventWithUser, email);
+    } else {
       throw new ApiError(400, 'Organizer information missing');
     }
-
-    await sendEventInvitation(event, email);
 
     return NextResponse.json(newAttendee, { status: 201 });
 
