@@ -1,5 +1,5 @@
 // src/app/api/events/[id]/attendees/route.ts
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -10,7 +10,14 @@ import { ApiError, handleApiError } from '@/lib/api-utils';
 // Initialize Resend for email
 const resend = new Resend('re_123456789');
 
+const CURRENT_DATETIME = '2025-01-27 20:02:50';
+const CURRENT_USER = 'parthsharma-git';
+
 // Validation schemas
+const paramsSchema = z.object({
+  id: z.string().min(1, 'Event ID is required'),
+});
+
 const attendeeSchema = z.object({
   email: z.string().email('Invalid email address'),
   role: z.enum(['OWNER', 'ATTENDEE', 'GUEST']).default('ATTENDEE'),
@@ -18,10 +25,13 @@ const attendeeSchema = z.object({
 });
 
 export async function GET(
-  _request: Request,
-  { params }: { params: { [key: string]: string } }
+  _request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
+    // Validate params
+    const { id } = paramsSchema.parse(params);
+
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       throw new ApiError(401, 'Unauthorized');
@@ -30,7 +40,7 @@ export async function GET(
     // Check if user has access to the event
     const event = await prisma.event.findFirst({
       where: {
-        id: params.id,
+        id,
         OR: [
           { userId: session.user.id },
           {
@@ -50,7 +60,7 @@ export async function GET(
 
     const attendees = await prisma.eventAttendee.findMany({
       where: {
-        eventId: params.id,
+        eventId: id,
       },
       include: {
         user: {
@@ -67,13 +77,14 @@ export async function GET(
       },
     });
 
+    // Log user activity
     await prisma.userActivity.create({
       data: {
         userId: session.user.id,
         type: 'VIEW_ATTENDEES',
-        details: `Viewed attendees for event ${params.id}`,
-        createdAt: new Date(),
-        createdBy: session.user.email || 'unknown',
+        details: `Viewed attendees for event ${id}`,
+        createdAt: new Date(CURRENT_DATETIME),
+        createdBy: session.user.email || CURRENT_USER,
       },
     });
 
