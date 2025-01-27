@@ -7,11 +7,11 @@ import { z } from 'zod';
 import { Resend } from 'resend';
 import { ApiError, handleApiError } from '@/lib/api-utils';
 
-const CURRENT_DATETIME = '2025-01-27 20:31:17';
+const CURRENT_DATETIME = '2025-01-27 20:47:49';
 const CURRENT_USER = 'parthsharma-git';
 
 // Initialize Resend for email
-const resend = new Resend('re_123456789');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Validation schemas
 const paramsSchema = z.object({
@@ -36,13 +36,15 @@ interface EventWithUser {
   };
 }
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+type RouteContext = {
+  params: Record<string, string | string[]>;
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+export async function GET(request: Request, context: RouteContext) {
   try {
     // Validate params
-    const { id } = paramsSchema.parse(params);
+    const { id } = paramsSchema.parse({ id: context.params.id });
 
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -105,12 +107,9 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, context: RouteContext) {
   try {
-    const { id } = paramsSchema.parse(params);
+    const { id } = paramsSchema.parse({ id: context.params.id });
 
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -199,12 +198,9 @@ export async function POST(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
-    const { id } = paramsSchema.parse(params);
+    const { id } = paramsSchema.parse({ id: context.params.id });
 
     const session = await getServerSession(authOptions);
     if (!session?.user) {
