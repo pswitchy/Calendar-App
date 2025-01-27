@@ -7,19 +7,18 @@ import { z } from 'zod';
 import { Resend } from 'resend';
 import { ApiError, handleApiError } from '@/lib/api-utils';
 
-const CURRENT_DATETIME = '2025-01-27 20:47:49';
-const CURRENT_USER = 'parthsharma-git';
-
-// Initialize Resend for email
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend with environment variable validation
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 // Validation schemas
 const paramsSchema = z.object({
-  id: z.string().min(1, 'Event ID is required'),
+  id: z.string().min(1, 'Valid event ID is required'),
 });
 
 const attendeeSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string()
+    .email('Invalid email address')
+    .transform(email => email.toLowerCase()),
   role: z.enum(['OWNER', 'ATTENDEE', 'GUEST']).default('ATTENDEE'),
   status: z.enum(['PENDING', 'ACCEPTED', 'DECLINED', 'TENTATIVE']).default('PENDING'),
 });
@@ -36,69 +35,90 @@ interface EventWithUser {
   };
 }
 
+// Utility function for common authorization checks
+async function verifyEventAccess(eventId: string, userId: string, requiredRole?: 'OWNER') {
+  const whereClause = {
+    id: eventId,
+    OR: [
+      { userId },
+      {
+        attendees: {
+          some: {
+            userId,
+            ...(requiredRole && { role: requiredRole })
+          }
+        }
+      }
+    ]
+  };
+
+  const event = await prisma.event.findFirst({
+    where: whereClause,
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true
+        }
+      }
+    }
+  });
+
+  if (!event) {
+    throw new ApiError(404, 'Event not found or access denied');
+  }
+
+  return event;
+}
+
 export async function GET(
   _request: Request,
-  { params }: { params: { [key: string]: string | string[] } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = paramsSchema.parse({ id: params.id });
-
+    const { id } = paramsSchema.parse(params);
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      throw new ApiError(401, 'Unauthorized');
+    
+    if (!session?.user?.id) {
+      throw new ApiError(401, 'Authentication required');
     }
 
-    // Check if user has access to the event
-    const event = await prisma.event.findFirst({
-      where: {
-        id,
-        OR: [
-          { userId: session.user.id },
-          {
-            attendees: {
-              some: {
-                userId: session.user.id,
-              },
-            },
-          },
-        ],
-      },
-    });
+    // Verify event access
+    await verifyEventAccess(id, session.user.id);
 
-    if (!event) {
-      throw new ApiError(404, 'Event not found or access denied');
-    }
-
+    // Retrieve attendees with user details
     const attendees = await prisma.eventAttendee.findMany({
-      where: {
-        eventId: id,
-      },
+      where: { eventId: id },
       include: {
         user: {
           select: {
             id: true,
             name: true,
             email: true,
-            image: true,
-          },
-        },
+            image: true
+          }
+        }
       },
-      orderBy: {
-        createdAt: 'asc',
-      },
+      orderBy: { createdAt: 'asc' }
     });
 
+    // Log activity
     await prisma.userActivity.create({
       data: {
         userId: session.user.id,
         type: 'VIEW_ATTENDEES',
         details: `Viewed attendees for event ${id}`,
-        createdAt: new Date(CURRENT_DATETIME),
-        createdBy: CURRENT_USER,
-      },
+        createdAt: new Date(),
+        createdBy: session.user.email || 'system'
+      }
     });
 
-    return NextResponse.json(attendees);
+    return NextResponse.json(attendees, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0'
+      }
+    });
+
   } catch (error) {
     return handleApiError(error);
   }
@@ -106,93 +126,75 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { [key: string]: string | string[] } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = paramsSchema.parse({ id: params.id });
-
+    const { id } = paramsSchema.parse(params);
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      throw new ApiError(401, 'Unauthorized');
+    
+    if (!session?.user?.id) {
+      throw new ApiError(401, 'Authentication required');
     }
 
     const body = await request.json();
     const { email, role, status } = attendeeSchema.parse(body);
 
-    // Check if user has permission to add attendees
-    const event = await prisma.event.findFirst({
-      where: {
-        id,
-        OR: [
-          { userId: session.user.id },
-          {
-            attendees: {
-              some: {
-                userId: session.user.id,
-                role: 'OWNER',
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    // Verify event access with owner privileges
+    const event = await verifyEventAccess(id, session.user.id, 'OWNER');
 
-    if (!event) {
-      throw new ApiError(404, 'Event not found or access denied');
-    }
-
-    // Check if attendee already exists
-    const existingAttendee = await prisma.eventAttendee.findFirst({
+    // Check existing attendee
+    const existingAttendee = await prisma.eventAttendee.findUnique({
       where: {
-        eventId: id,
-        email: email,
-      },
+        eventId_email: {
+          eventId: id,
+          email
+        }
+      }
     });
 
     if (existingAttendee) {
-      throw new ApiError(400, 'Attendee already exists for this event');
+      throw new ApiError(409, 'Attendee already exists for this event');
     }
 
-    // Create new attendee
-    const attendee = await prisma.eventAttendee.create({
-      data: {
-        eventId: id,
-        email,
-        role,
-        status,
-        userId: session.user.id,
-        createdAt: new Date(CURRENT_DATETIME),
-        createdBy: CURRENT_USER,
-      },
-    });
+    // Create attendee transaction
+    const [attendee] = await prisma.$transaction([
+      prisma.eventAttendee.create({
+        data: {
+          eventId: id,
+          email,
+          role,
+          status,
+          userId: session.user.id,
+          createdAt: new Date(),
+          createdBy: session.user.email || 'system'
+        }
+      }),
+      prisma.userActivity.create({
+        data: {
+          userId: session.user.id,
+          type: 'ADD_ATTENDEE',
+          details: `Added ${email} to event ${id}`,
+          createdAt: new Date(),
+          createdBy: session.user.email || 'system'
+        }
+      })
+    ]);
 
-    // Ensure user name and email are not null
+    // Validate organizer information
     if (!event.user.name || !event.user.email) {
-      throw new ApiError(400, 'Event organizer name or email is missing');
+      throw new ApiError(500, 'Event organizer information incomplete');
     }
 
-    // Send invitation email
-    await sendEventInvitation(event as EventWithUser, email);
+    // Send invitation
+    await sendEventInvitation(event, email);
 
-    await prisma.userActivity.create({
-      data: {
-        userId: session.user.id,
-        type: 'ADD_ATTENDEE',
-        details: `Added attendee ${email} to event ${id}`,
-        createdAt: new Date(CURRENT_DATETIME),
-        createdBy: CURRENT_USER,
-      },
+    return NextResponse.json(attendee, { 
+      status: 201,
+      headers: {
+        'Cache-Control': 'no-store'
+      }
     });
 
-    return NextResponse.json(attendee, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }
@@ -200,93 +202,91 @@ export async function POST(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { [key: string]: string | string[] } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = paramsSchema.parse({ id: params.id });
-
+    const { id } = paramsSchema.parse(params);
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      throw new ApiError(401, 'Unauthorized');
+    
+    if (!session?.user?.id) {
+      throw new ApiError(401, 'Authentication required');
     }
 
     const url = new URL(request.url);
-    const attendeeEmail = url.searchParams.get('email');
-
-    if (!attendeeEmail) {
-      throw new ApiError(400, 'Attendee email is required');
+    const email = url.searchParams.get('email');
+    
+    if (!email) {
+      throw new ApiError(400, 'Email parameter is required');
     }
 
-    // Check if user has permission to remove attendees
-    const event = await prisma.event.findFirst({
-      where: {
-        id,
-        OR: [
-          { userId: session.user.id },
-          {
-            attendees: {
-              some: {
-                userId: session.user.id,
-                role: 'OWNER',
-              },
-            },
-          },
-        ],
-      },
+    // Verify event access with owner privileges
+    await verifyEventAccess(id, session.user.id, 'OWNER');
+
+    // Delete attendee transaction
+    await prisma.$transaction([
+      prisma.eventAttendee.deleteMany({
+        where: {
+          eventId: id,
+          email
+        }
+      }),
+      prisma.userActivity.create({
+        data: {
+          userId: session.user.id,
+          type: 'REMOVE_ATTENDEE',
+          details: `Removed ${email} from event ${id}`,
+          createdAt: new Date(),
+          createdBy: session.user.email || 'system'
+        }
+      })
+    ]);
+
+    return new NextResponse(null, { 
+      status: 204,
+      headers: {
+        'Cache-Control': 'no-store'
+      }
     });
 
-    if (!event) {
-      throw new ApiError(404, 'Event not found or access denied');
-    }
-
-    // Remove attendee
-    await prisma.eventAttendee.deleteMany({
-      where: {
-        eventId: id,
-        email: attendeeEmail,
-      },
-    });
-
-    await prisma.userActivity.create({
-      data: {
-        userId: session.user.id,
-        type: 'REMOVE_ATTENDEE',
-        details: `Removed attendee ${attendeeEmail} from event ${id}`,
-        createdAt: new Date(CURRENT_DATETIME),
-        createdBy: CURRENT_USER,
-      },
-    });
-
-    return new NextResponse(null, { status: 204 });
   } catch (error) {
     return handleApiError(error);
   }
 }
 
+// Email service function
 async function sendEventInvitation(event: EventWithUser, recipientEmail: string) {
   try {
+    if (!process.env.NEXTAUTH_URL) {
+      throw new Error('NEXTAUTH_URL environment variable not set');
+    }
+
     const response = await resend.emails.send({
-      from: 'Calendar App <noreply@yourdomain.com>',
+      from: 'Event Manager <noreply@yourdomain.com>',
       to: recipientEmail,
       subject: `Invitation: ${event.title}`,
       html: `
-        <h2>You've been invited to an event</h2>
-        <p><strong>Event:</strong> ${event.title}</p>
-        <p><strong>Organizer:</strong> ${event.user.name} (${event.user.email})</p>
-        <p><strong>Date:</strong> ${new Date(event.startTime).toLocaleString()}</p>
-        ${event.location ? `<p><strong>Location:</strong> ${event.location}</p>` : ''}
-        ${event.description ? `<p><strong>Description:</strong> ${event.description}</p>` : ''}
-        <p>
-          <a href="${process.env.NEXTAUTH_URL}/calendar/events/${event.id}/respond?email=${recipientEmail}">
-            Respond to Invitation
-          </a>
-        </p>
-      `,
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Event Invitation</h2>
+          <p><strong>Event:</strong> ${event.title}</p>
+          <p><strong>Organizer:</strong> ${event.user.name} (${event.user.email})</p>
+          <p><strong>Date:</strong> ${event.startTime.toLocaleString()}</p>
+          ${event.location ? `<p><strong>Location:</strong> ${event.location}</p>` : ''}
+          ${event.description ? `<p><strong>Details:</strong> ${event.description}</p>` : ''}
+          <div style="margin-top: 2rem;">
+            <a href="${process.env.NEXTAUTH_URL}/events/${event.id}/respond?email=${encodeURIComponent(recipientEmail)}" 
+               style="background-color: #2563eb; color: white; padding: 0.75rem 1.5rem; 
+                      text-decoration: none; border-radius: 0.375rem;">
+              Respond to Invitation
+            </a>
+          </div>
+        </div>
+      `
     });
 
     return response;
+
   } catch (error) {
-    console.error('Error sending invitation email:', error);
-    // Don't throw error to prevent blocking the attendee creation
+    console.error('Email sending failed:', error);
+    // Consider adding failed email logging to your database
   }
 }
