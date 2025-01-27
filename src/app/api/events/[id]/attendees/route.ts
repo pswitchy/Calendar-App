@@ -33,8 +33,6 @@ interface EventWithUser {
   };
 }
 
-// Proper Next.js route handler types
-type RouteParams = { params: { id: string } };
 
 // Shared authorization check
 async function verifyEventAccess(eventId: string, userId: string, requiredRole?: 'OWNER') {
@@ -64,7 +62,7 @@ async function verifyEventAccess(eventId: string, userId: string, requiredRole?:
   return event;
 }
 
-export async function GET(_request: Request, { params }: RouteParams) {
+export async function GET(_request: Request, params: { id: string }) {
   try {
     const { id } = paramsSchema.parse(params);
     const session = await getServerSession(authOptions);
@@ -102,7 +100,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
   }
 }
 
-export async function POST(request: Request, { params }: RouteParams) {
+export async function POST(request: Request, params: { id: string }) {
   try {
     const { id } = paramsSchema.parse(params);
     const session = await getServerSession(authOptions);
@@ -158,7 +156,7 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(request: Request, params: { id: string }) {
   try {
     const { id } = paramsSchema.parse(params);
     const session = await getServerSession(authOptions);
