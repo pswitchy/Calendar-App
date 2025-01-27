@@ -18,10 +18,7 @@ const eventSchema = z.object({
   color: z.string().optional(),
 });
 
-export async function GET(
-  req: Request,
-  { }: { params: { id?: string } }
-) {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
