@@ -1,5 +1,5 @@
 // src/app/api/events/[id]/attendees/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -8,7 +8,7 @@ import { Resend } from 'resend';
 import { ApiError, handleApiError } from '@/lib/api-utils';
 
 // Initialize Resend for email
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend('re_123456789');
 
 // Validation schemas
 const attendeeSchema = z.object({
@@ -18,7 +18,7 @@ const attendeeSchema = z.object({
 });
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -72,8 +72,8 @@ export async function GET(
         userId: session.user.id,
         type: 'VIEW_ATTENDEES',
         details: `Viewed attendees for event ${params.id}`,
-        createdAt: new Date('2025-01-27 10:46:05'),
-        createdBy: 'parthsharma-git',
+        createdAt: new Date(),
+        createdBy: session.user.email || 'unknown',
       },
     });
 
@@ -84,7 +84,7 @@ export async function GET(
 }
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -146,8 +146,8 @@ export async function POST(
         role,
         status,
         userId: session.user.id,
-        createdAt: new Date('2025-01-27 10:46:05'),
-        createdBy: 'parthsharma-git',
+        createdAt: new Date(),
+        createdBy: session.user.email || 'unknown',
       },
     });
 
@@ -164,8 +164,8 @@ export async function POST(
         userId: session.user.id,
         type: 'ADD_ATTENDEE',
         details: `Added attendee ${email} to event ${params.id}`,
-        createdAt: new Date('2025-01-27 10:46:05'),
-        createdBy: 'parthsharma-git',
+        createdAt: new Date(),
+        createdBy: session.user.email || 'unknown',
       },
     });
 
@@ -176,7 +176,7 @@ export async function POST(
 }
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -227,8 +227,8 @@ export async function DELETE(
         userId: session.user.id,
         type: 'REMOVE_ATTENDEE',
         details: `Removed attendee ${attendeeEmail} from event ${params.id}`,
-        createdAt: new Date('2025-01-27 10:46:05'),
-        createdBy: 'parthsharma-git',
+        createdAt: new Date(),
+        createdBy: session.user.email || 'unknown',
       },
     });
 
