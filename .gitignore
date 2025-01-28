@@ -88,11 +88,7 @@ debug.log
 # Typescript
 *.tsbuildinfo
 
-# Prisma
-/prisma/*.db
-/prisma/migrations/
-/prisma/dev.db
-/prisma/dev.db-journal
+
 
 # Cache
 .cache/
