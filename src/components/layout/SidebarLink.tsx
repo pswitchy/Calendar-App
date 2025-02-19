@@ -12,8 +12,9 @@ import React from 'react';
 interface SidebarLinkProps {
   href: string;
   icon: LucideIcon;
-  children: ReactNode;
   label: string;
+  className?: string;
+  children: React.ReactNode;
   isCollapsed?: boolean;
   onClick?: () => void;
   badge?: number;

@@ -1,3 +1,4 @@
+// src/app/calendar/layout.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -10,6 +11,8 @@ import { useCustomToast } from '@/components/ui/useCustomToast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Providers } from '@/components/providers';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 function CalendarLayoutContent({
   children,
@@ -21,7 +24,12 @@ function CalendarLayoutContent({
   const toast = useCustomToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { currentDate: date, navigateToNext, navigateToPrevious, navigateToToday } = useCalendar();
-  // const currentDateTime = new Date('2025-01-23 16:52:06');
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+
+  useEffect(() => {
+    // Set initial sidebar state based on screen size
+    setIsSidebarOpen(isDesktop);
+  }, [isDesktop]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -35,26 +43,86 @@ function CalendarLayoutContent({
   }
 
   return (
-    <div className="flex h-screen flex-col">
-      <CalendarHeader
-        isSidebarOpen={isSidebarOpen}
-        onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-        currentDate={date}
-        onPrevMonth={navigateToPrevious}
-        onNextMonth={navigateToNext}
-        onToday={navigateToToday}
-      />
-      <div className="flex flex-1 overflow-hidden">
-        <CalendarSidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          className={cn(
-            'w-64 border-r border-gray-200 bg-white transition-all duration-300',
-            'dark:border-gray-800 dark:bg-gray-900',
-            !isSidebarOpen && '-ml-64'
-          )}
+    <div className="flex h-screen flex-col bg-background">
+      <motion.div
+        initial={false}
+        animate={{ height: 'auto' }}
+        className="sticky top-0 z-10"
+      >
+        <CalendarHeader
+          isSidebarOpen={isSidebarOpen}
+          onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+          currentDate={date}
+          onPrevMonth={navigateToPrevious}
+          onNextMonth={navigateToNext}
+          onToday={navigateToToday}
+          className="border-b backdrop-blur-sm bg-background/80"
         />
-        <main className="flex-1 overflow-auto">{children}</main>
+      </motion.div>
+
+      <div className="flex flex-1 overflow-hidden relative">
+        <AnimatePresence mode="wait">
+          {isSidebarOpen && (
+            <motion.div
+              initial={{ x: isDesktop ? 0 : -320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -320, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="absolute lg:relative z-20"
+            >
+              <CalendarSidebar
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                className={cn(
+                  'w-80 border-r border-border bg-background/80 backdrop-blur-sm h-full',
+                  'shadow-lg lg:shadow-none'
+                )}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.main
+          layout
+          className={cn(
+            "flex-1 overflow-auto transition-all duration-300 ease-in-out",
+            isSidebarOpen && !isDesktop && "opacity-50"
+          )}
+          style={{
+            transformOrigin: "left"
+          }}
+        >
+          <div className="h-full p-4 lg:p-6">{children}</div>
+        </motion.main>
+
+        {/* Overlay for mobile when sidebar is open */}
+        {isSidebarOpen && !isDesktop && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-10"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CalendarSkeleton() {
+  return (
+    <div className="flex h-screen flex-col">
+      <div className="h-16 border-b border-border">
+        <Skeleton className="h-full w-full animate-pulse" />
+      </div>
+      <div className="flex flex-1">
+        <div className="w-80 border-r border-border">
+          <Skeleton className="h-full w-full animate-pulse" />
+        </div>
+        <div className="flex-1 p-6">
+          <Skeleton className="h-full w-full animate-pulse" />
+        </div>
       </div>
     </div>
   );
@@ -69,23 +137,5 @@ export default function CalendarLayout({
     <Providers>
       <CalendarLayoutContent>{children}</CalendarLayoutContent>
     </Providers>
-  );
-}
-
-function CalendarSkeleton() {
-  return (
-    <div className="flex h-screen flex-col">
-      <div className="h-16 border-b border-gray-200 dark:border-gray-800">
-        <Skeleton className="h-full w-full" />
-      </div>
-      <div className="flex flex-1">
-        <div className="w-64 border-r border-gray-200 dark:border-gray-800">
-          <Skeleton className="h-full w-full" />
-        </div>
-        <div className="flex-1 p-4">
-          <Skeleton className="h-full w-full" />
-        </div>
-      </div>
-    </div>
   );
 }

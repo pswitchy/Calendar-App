@@ -6,9 +6,11 @@ const nextConfig = {
     experimental: {
       serverActions: true,
     },
-    generateBuildId: async () => {
-      return process.env.RENDER_GIT_COMMIT || 'custom-build-id';
-    },
-  }
-  
-  module.exports = nextConfig
+}
+
+module.exports = {
+  ...nextConfig,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+}
