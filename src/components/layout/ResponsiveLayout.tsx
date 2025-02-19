@@ -27,18 +27,17 @@ export const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    return () => window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Header - Only visible on mobile */}
       <header 
         className={cn(
           "fixed top-0 left-0 right-0 z-50 h-14",
           "bg-background/80 backdrop-blur-sm border-b",
-          "transition-all duration-300 ease-in-out",
-          isSidebarOpen && !isMobile ? "lg:pl-64" : "lg:pl-0"
+          "lg:hidden" // Hide on desktop
         )}
       >
         <div className="h-full px-4 flex items-center justify-between">
@@ -47,7 +46,6 @@ export const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
               variant="ghost"
               size="icon"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="lg:hidden"
             >
               {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </Button>
@@ -73,18 +71,22 @@ export const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
             
             {/* Sidebar */}
             <motion.aside
-              initial={{ x: -320 }}
+              initial={isMobile ? { x: -320 } : undefined}
               animate={{ x: 0 }}
-              exit={{ x: -320 }}
+              exit={isMobile ? { x: -320 } : undefined}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className={cn(
                 "fixed top-0 left-0 z-50 h-full w-64",
                 "bg-background border-r",
+                "flex flex-col",
                 "lg:translate-x-0 lg:z-0"
               )}
             >
-              <div className="flex items-center justify-between p-4 h-14">
-                <h2 className="font-semibold">Menu</h2>
+              {/* Sidebar Header */}
+              <div className="flex items-center justify-between p-4 h-14 border-b">
+                <div className="flex items-center gap-3">
+                  <h2 className="font-semibold">Calendar App</h2>
+                </div>
                 {!isMobile && (
                   <Button
                     variant="ghost"
@@ -96,7 +98,8 @@ export const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
                 )}
               </div>
               
-              <nav className="p-4 space-y-1">
+              {/* Sidebar Navigation */}
+              <nav className="flex-1 p-4 space-y-1">
                 <SidebarLink 
                   href="/calendar" 
                   icon={Calendar}
@@ -139,13 +142,17 @@ export const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
       {/* Main Content */}
       <main
         className={cn(
-          "pt-14 transition-all duration-300 ease-in-out",
+          "transition-all duration-300 ease-in-out",
+          isMobile ? "pt-14" : "pt-0", // Only add top padding on mobile
           isSidebarOpen && !isMobile ? "lg:pl-64" : "lg:pl-0"
         )}
       >
         <motion.div
           layout
-          className="h-[calc(100vh-3.5rem)] p-4"
+          className={cn(
+            "min-h-screen p-4",
+            "lg:p-6" // Larger padding on desktop
+          )}
         >
           {children}
         </motion.div>
