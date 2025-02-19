@@ -14,6 +14,7 @@ interface CalendarHeaderProps {
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onToday: () => void;
+  className?: string;
 }
 
 export const CalendarHeader = ({
